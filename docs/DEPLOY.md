@@ -1,11 +1,21 @@
 # EC2 자동 배포 (GitHub Actions)
 
-`main` 브랜치에 push되면 EC2에 SSH 접속 후 **git pull → JAR 빌드 → 백그라운드 재시작**을 수행합니다.
+`main` 브랜치에 push되면 **앱 EC2**에 SSH 접속 후 **git pull → JAR 빌드 → 백그라운드 재시작**을 수행합니다.
+
+PostgreSQL + pgvector는 **별도 DB EC2** (`dontdelay-DB`)에 둡니다. 생성·보안 그룹·설치는 [`DATABASE_EC2.md`](DATABASE_EC2.md)를 따르세요.
+
+## 아키텍처
+
+```text
+GitHub Actions ──SSH──▶ [dontdelay-app EC2 :8080] ──5432──▶ [dontdelay-DB EC2]
+                              │
+                              └── S3 (IAM Role, exam 파일)
+```
 
 ## 흐름
 
 ```text
-git push main → GitHub Actions → SSH(EC2) → git fetch/reset → ./gradlew bootJar → restart.sh
+git push main → GitHub Actions → SSH(앱 EC2) → git fetch/reset → ./gradlew bootJar → restart.sh
 ```
 
 ## 1. EC2 최초 설정 (1회)
@@ -43,7 +53,19 @@ Host github.com
 
 ### IAM Role
 
-EC2 인스턴스에 S3 접근용 IAM Role을 연결합니다. Access Key는 불필요합니다.
+**앱 EC2**에 S3 접근용 IAM Role을 연결합니다. Access Key는 불필요합니다. DB EC2에는 S3 Role이 필요 없습니다.
+
+### PostgreSQL (DB EC2)
+
+앱이 Postgres를 쓰도록 전환한 뒤, **앱 EC2**에만 다음 환경 변수를 설정합니다 (DB 프라이빗 IP는 [`DATABASE_EC2.md`](DATABASE_EC2.md) 참고).
+
+```bash
+export SPRING_DATASOURCE_URL="jdbc:postgresql://<DB_PRIVATE_IP>:5432/dontdelay"
+export SPRING_DATASOURCE_USERNAME=dontdelay_app
+export SPRING_DATASOURCE_PASSWORD='...'
+```
+
+`restart.sh`는 `SPRING_PROFILES_ACTIVE=prod`를 사용하므로, 위 변수를 `~/.bashrc`, systemd `EnvironmentFile`, 또는 `run/env.sh` 등에 두고 재시작 전에 `source` 하면 됩니다.
 
 ## 2. GitHub Actions Secrets
 
@@ -92,4 +114,5 @@ cat run/app.pid
 | `git fetch` 실패 | Deploy key, `git remote -v` |
 | `gradlew: Permission denied` | `chmod +x gradlew` |
 | S3 Access Denied | EC2 IAM Role, 버킷 이름 |
+| DB 연결 실패 | [`DATABASE_EC2.md`](DATABASE_EC2.md) — SG 5432, `pg_hba`, 프라이빗 IP |
 | 포트 충돌 | `run/app.pid` 프로세스, `ss -lntp \| grep 8080` |
