@@ -25,7 +25,7 @@ bash scripts/deploy/ec2-first-setup.sh ~/DontDelay_SERVER git@github.com:YOUR_US
 
 ### Private 저장소 — Deploy Key
 
-EC2에서 `git pull`이 되려면 배포 키가 필요합니다.
+EC2에서 `git pull`이 되려면 배포 키가 필요합니다..
 
 1. EC2에서: `ssh-keygen -t ed25519 -f ~/.ssh/github_deploy -N ""`
 2. `cat ~/.ssh/github_deploy.pub` 내용을 GitHub repo → **Settings → Deploy keys** → Add (Read-only면 충분)
