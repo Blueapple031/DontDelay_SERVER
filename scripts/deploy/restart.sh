@@ -13,6 +13,13 @@ fi
 
 mkdir -p run logs
 
+if [ -f run/env.sh ]; then
+  # shellcheck source=/dev/null
+  set -a
+  source run/env.sh
+  set +a
+fi
+
 if [ -f run/app.pid ]; then
   OLD_PID="$(cat run/app.pid)"
   if kill -0 "$OLD_PID" 2>/dev/null; then

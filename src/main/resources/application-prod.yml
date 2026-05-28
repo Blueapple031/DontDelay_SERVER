@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:h2:file:./data/dontdelay-db;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    # Postgres: run/env.sh on app EC2 (see scripts/deploy/env.example)
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/dontdelay-db;DB_CLOSE_DELAY=-1}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
   jpa:
     show-sql: false
     hibernate:

@@ -12,7 +12,7 @@ if [ -z "$REPO_URL" ]; then
 fi
 
 sudo apt-get update
-sudo apt-get install -y openjdk-17-jre-headless git
+sudo apt-get install -y openjdk-17-jdk-headless git
 
 if [ ! -d "$APP_DIR/.git" ]; then
   git clone "$REPO_URL" "$APP_DIR"

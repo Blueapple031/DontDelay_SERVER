@@ -37,13 +37,13 @@ PG_HBA="/etc/postgresql/16/main/pg_hba.conf"
 sed -i "s/^#*listen_addresses.*/listen_addresses = '*'/" "$PG_CONF"
 sed -i "s/^#*max_connections.*/max_connections = 100/" "$PG_CONF"
 
-# Password auth for app user from private network (adjust CIDR to your VPC/subnet)
+# Password auth for app user from private network (AWS default VPC: 172.31.0.0/16)
+APP_CIDR="${APP_CIDR:-172.31.0.0/16}"
 if ! grep -q "dontdelay-app-ipv4" "$PG_HBA"; then
-  cat >> "$PG_HBA" <<'EOF'
+  cat >> "$PG_HBA" <<EOF
 
-# dontdelay Spring app (replace 10.0.0.0/16 with your VPC CIDR or app EC2 /32)
-# hostssl  dontdelay  dontdelay_app  10.0.0.0/16  scram-sha-256
-host     dontdelay  dontdelay_app  10.0.0.0/16  scram-sha-256
+# dontdelay Spring app (tighten to app private IP/32 if you prefer)
+host     dontdelay  dontdelay_app  ${APP_CIDR}  scram-sha-256
 EOF
 fi
 

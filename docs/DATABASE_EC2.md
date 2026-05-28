@@ -2,6 +2,8 @@
 
 Spring 앱 EC2와 **분리된** DB 전용 인스턴스입니다. 메타데이터·벡터 임베딩(pgvector)는 여기에 두고, PDF·시험 파일은 S3에 둡니다.
 
+> **리전:** 앱 EC2와 DB EC2는 **같은 리전·같은 VPC**여야 프라이빗 IP(`172.31.x.x`)로 5432 접속이 됩니다. 리전이 다르면 타임아웃됩니다.
+
 ```text
 [dontdelay-app EC2]  ──5432──▶  [dontdelay-DB EC2]
        │                              PostgreSQL 16 + pgvector
@@ -60,13 +62,15 @@ sudo -E bash scripts/deploy/ec2-postgres-pgvector-setup.sh dontdelay dontdelay_a
 
 ### 2.3 `pg_hba.conf` CIDR 수정
 
-스크립트는 기본으로 `10.0.0.0/16`을 넣습니다. **실제 VPC CIDR** 또는 **앱 EC2 프라이빗 IP/32**로 바꿉니다.
+스크립트는 AWS 기본 VPC용 **`172.31.0.0/16`** 을 넣습니다. 더 좁히려면 **앱 EC2 프라이빗 IP/32** 로 바꿉니다 (예: 서울 앱 `172.31.44.107/32`).
 
 ```bash
 sudo nano /etc/postgresql/16/main/pg_hba.conf
-# 예: host  dontdelay  dontdelay_app  10.0.1.50/32  scram-sha-256
+# 예: host  dontdelay  dontdelay_app  172.31.44.107/32  scram-sha-256
 sudo systemctl restart postgresql
 ```
+
+설치 시 앱 IP만 허용: `sudo APP_CIDR=172.31.44.107/32 bash scripts/deploy/ec2-postgres-pgvector-setup.sh`
 
 ### 2.4 동작 확인 (DB EC2에서)
 
@@ -79,15 +83,17 @@ sudo -u postgres psql -d dontdelay -c "\dx"
 
 ## 3. 앱 EC2(Spring) 연결 설정
 
-DB EC2의 **프라이빗 IP**를 사용합니다 (같은 VPC).
+DB EC2의 **프라이빗 IP**를 사용합니다 (같은 VPC·같은 리전).
 
 ```bash
-# 앱 EC2 — restart.sh / systemd / .env 등에 설정
-export SPRING_PROFILES_ACTIVE=prod
-export SPRING_DATASOURCE_URL="jdbc:postgresql://10.0.1.xx:5432/dontdelay"
-export SPRING_DATASOURCE_USERNAME=dontdelay_app
-export SPRING_DATASOURCE_PASSWORD='위에서_설정한_비밀번호'
+cd ~/DontDelay_SERVER
+cp scripts/deploy/env.example run/env.sh
+nano run/env.sh   # DB 프라이빗 IP·비밀번호 입력
+chmod 600 run/env.sh
+bash scripts/deploy/restart.sh   # restart.sh가 run/env.sh를 source함
 ```
+
+`run/env.sh` 없으면 prod는 기존처럼 **H2 파일 DB**로 기동합니다.
 
 연결 테스트 (앱 EC2에서):
 

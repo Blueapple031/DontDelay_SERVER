@@ -113,6 +113,7 @@ cat run/app.pid
 | `cd: No such file or directory` | EC2에 해당 경로 없음 → clone 먼저. Secret은 `/home/ubuntu/DontDelay_SERVER` 형식 |
 | `git fetch` 실패 | Deploy key, `git remote -v` |
 | `gradlew: Permission denied` | `chmod +x gradlew` |
+| `Cannot find a Java installation ... languageVersion=17` | EC2에 JDK: `sudo apt install -y openjdk-17-jdk-headless` (JRE만 있으면 빌드 실패) |
 | S3 Access Denied | EC2 IAM Role, 버킷 이름 |
 | DB 연결 실패 | [`DATABASE_EC2.md`](DATABASE_EC2.md) — SG 5432, `pg_hba`, 프라이빗 IP |
 | 포트 충돌 | `run/app.pid` 프로세스, `ss -lntp \| grep 8080` |
