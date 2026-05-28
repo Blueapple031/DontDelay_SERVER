@@ -8,13 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -55,15 +58,22 @@ class ExamDocumentControllerTest {
                         .param("subject", "테스트"))
                 .andExpect(status().isUnauthorized());
 
+        MockHttpSession session = new MockHttpSession();
+        mockMvc.perform(post("/api/auth/login")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"examtest\",\"password\":\"password\"}"))
+                .andExpect(status().isOk());
+
         mockMvc.perform(multipart("/api/exam/documents")
                         .file(file)
                         .param("subject", "테스트")
-                        .with(user("examtest")))
+                        .session(session))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("UPLOADED"))
                 .andExpect(jsonPath("$.subject").value("테스트"));
 
-        mockMvc.perform(get("/api/exam/documents").with(user("examtest")))
+        mockMvc.perform(get("/api/exam/documents").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.items[0].subject").value("테스트"));
