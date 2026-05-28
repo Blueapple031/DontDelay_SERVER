@@ -53,7 +53,7 @@ class ExamDocumentControllerTest {
         mockMvc.perform(multipart("/api/exam/documents")
                         .file(file)
                         .param("subject", "테스트"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         mockMvc.perform(multipart("/api/exam/documents")
                         .file(file)

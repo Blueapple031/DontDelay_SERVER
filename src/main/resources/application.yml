@@ -26,7 +26,8 @@ exam:
   max-upload-bytes: 52428800
   rate-limit-upload-per-hour: 10
   storage:
-    type: s3
+    type: local
+    local-base-path: ./data/exam-storage
 aws:
   region: ap-northeast-2
   s3:

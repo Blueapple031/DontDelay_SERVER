@@ -54,7 +54,7 @@ Repository → **Settings → Secrets and variables → Actions → New reposito
 | `EC2_HOST` | `ec2-xx.ap-northeast-2.compute.amazonaws.com` 또는 Elastic IP | EC2 주소 |
 | `EC2_USER` | `ubuntu` | SSH 사용자 |
 | `EC2_SSH_KEY` | PEM private key 전체 | EC2 접속용 키 페어 **프라이빗** 키 |
-| `EC2_APP_DIR` | `/home/ubuntu/DontDelay_SERVER` | 서버上的 clone 경로 (절대 경로) |
+| `EC2_APP_DIR` | `/home/ubuntu/DontDelay_SERVER` | EC2에 **실제로 clone한 절대 경로**. `~/...` 비권장(틀리기 쉬움) |
 | `EC2_SSH_PORT` | `22` | (선택) 기본 22 |
 
 `EC2_SSH_KEY`는 `.pem` 파일 내용을 그대로 붙여넣습니다 (`-----BEGIN ...` ~ `-----END ...`).
@@ -88,6 +88,7 @@ cat run/app.pid
 | 증상 | 확인 |
 |------|------|
 | Actions SSH 실패 | `EC2_HOST`, 보안 그룹 22, `EC2_SSH_KEY` 형식 |
+| `cd: No such file or directory` | EC2에 해당 경로 없음 → clone 먼저. Secret은 `/home/ubuntu/DontDelay_SERVER` 형식 |
 | `git fetch` 실패 | Deploy key, `git remote -v` |
 | `gradlew: Permission denied` | `chmod +x gradlew` |
 | S3 Access Denied | EC2 IAM Role, 버킷 이름 |

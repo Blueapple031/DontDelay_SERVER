@@ -1,0 +1,4 @@
+exam:
+  storage:
+    type: local
+    local-base-path: ./build/test-exam-storage
