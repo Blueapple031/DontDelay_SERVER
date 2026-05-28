@@ -12,9 +12,26 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 server:
   port: 8080
+
+exam:
+  generator:
+    enabled: true
+  max-upload-bytes: 52428800
+  rate-limit-upload-per-hour: 10
+  storage:
+    type: s3
+aws:
+  region: ap-northeast-2
+  s3:
+    bucket: dontdelay-exam
+    presigned-url-ttl-minutes: 15
 
 management:
   endpoints:

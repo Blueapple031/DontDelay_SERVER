@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    show-sql: false
+
+exam:
+  storage:
+    type: s3
+
+aws:
+  region: ap-northeast-2

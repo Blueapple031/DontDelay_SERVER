@@ -20,8 +20,11 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/actuator/health", "/h2-console/**").permitAll()
+                .requestMatchers("/api/exam/**").authenticated()
                 .anyRequest().authenticated()
             )
+            .sessionManagement(session -> session.sessionCreationPolicy(
+                    org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED))
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
