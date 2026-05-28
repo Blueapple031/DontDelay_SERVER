@@ -962,7 +962,7 @@ LATEX_FONT_PATH=/usr/share/fonts/noto-cjk
 
 ---
 
-## 15. 변경 이력
+## 15. 변경 이력.
 
 | 일자 | 내용 |
 |------|------|
