@@ -2,6 +2,7 @@ spring:
   datasource:
     # Postgres: run/env.sh on app EC2 (see scripts/deploy/env.example)
     url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/dontdelay-db;DB_CLOSE_DELAY=-1}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
     username: ${SPRING_DATASOURCE_USERNAME:sa}
     password: ${SPRING_DATASOURCE_PASSWORD:}
   jpa:
