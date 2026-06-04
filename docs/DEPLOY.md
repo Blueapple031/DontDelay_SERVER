@@ -2,13 +2,15 @@
 
 `main` 브랜치에 push되면 **앱 EC2**에 SSH 접속 후 **git pull → JAR 빌드 → 백그라운드 재시작**을 수행합니다.
 
-PostgreSQL + pgvector는 **별도 DB EC2** (`dontdelay-DB`)에 둡니다. 생성·보안 그룹·설치는 [`DATABASE_EC2.md`](DATABASE_EC2.md)를 따르세요.
+**현재 DB:** 앱 EC2 로컬 **H2 파일** (`./data/dontdelay-db`). 별도 Postgres EC2는 사용하지 않습니다.
+
+Postgres + pgvector 전환 시 [`DATABASE_EC2.md`](DATABASE_EC2.md) 및 `scripts/deploy/env.example` 주석을 참고하세요.
 
 ## 아키텍처
 
 ```text
-GitHub Actions ──SSH──▶ [dontdelay-app EC2 :8080] ──5432──▶ [dontdelay-DB EC2]
-                              │
+GitHub Actions ──SSH──▶ [dontdelay-app EC2 :8080]
+                              ├── H2 파일 DB (./data/dontdelay-db)
                               └── S3 (IAM Role, exam 파일)
 ```
 

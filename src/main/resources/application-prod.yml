@@ -1,6 +1,6 @@
 spring:
   datasource:
-    # Postgres: run/env.sh on app EC2 (see scripts/deploy/env.example)
+    # 현재: H2 파일 DB (앱 EC2 로컬). Postgres 전환 시 run/env.sh 참고.
     url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/dontdelay-db;DB_CLOSE_DELAY=-1}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
     username: ${SPRING_DATASOURCE_USERNAME:sa}

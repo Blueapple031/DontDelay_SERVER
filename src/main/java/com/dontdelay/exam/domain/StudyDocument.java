@@ -96,4 +96,34 @@ public class StudyDocument {
     public void touchUpdatedAt() {
         this.updatedAt = OffsetDateTime.now();
     }
+
+    public void markStatus(DocumentStatus status, int progress) {
+        this.status = status;
+        this.progress = progress;
+        touchUpdatedAt();
+    }
+
+    public void updateIndexingProgress(int chunkCount, int progress) {
+        this.chunkCount = chunkCount;
+        this.progress = progress;
+        touchUpdatedAt();
+    }
+
+    public void markReady(int pageCount, int chunkCount) {
+        this.status = DocumentStatus.READY;
+        this.pageCount = pageCount;
+        this.chunkCount = chunkCount;
+        this.progress = 100;
+        this.errorCode = null;
+        this.errorMessage = null;
+        touchUpdatedAt();
+    }
+
+    public void markFailed(String errorCode, String errorMessage) {
+        this.status = DocumentStatus.FAILED;
+        this.progress = 0;
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        touchUpdatedAt();
+    }
 }

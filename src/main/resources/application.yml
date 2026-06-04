@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:dontdelay
+    url: jdbc:h2:file:./data/dontdelay-db;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -9,8 +9,9 @@ spring:
       enabled: true
       path: /h2-console
   jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
   servlet:
     multipart:
@@ -25,9 +26,25 @@ exam:
     enabled: true
   max-upload-bytes: 52428800
   rate-limit-upload-per-hour: 10
+  chunk-size: 800
+  chunk-overlap: 120
+  min-chunk-size: 100
+  embedding-dimensions: 1536
+  ocr:
+    enabled: ${OCR_ENABLED:true}
+    min-chars-per-page: 50
   storage:
     type: local
     local-base-path: ./data/exam-storage
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  embedding-model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+
+upstage:
+  api-key: ${UPSTAGE_API_KEY:}
+  base-url: ${UPSTAGE_BASE_URL:https://api.upstage.ai}
+
 aws:
   region: ap-northeast-2
   s3:

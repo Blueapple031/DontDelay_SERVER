@@ -1,5 +1,7 @@
 # dontdelay-DB — PostgreSQL + pgvector (전용 EC2)
 
+> **현재 운영:** 앱 EC2 로컬 **H2 파일 DB** (`jdbc:h2:file:./data/dontdelay-db`). 이 문서는 Postgres 전환 시 참고용입니다.
+
 Spring 앱 EC2와 **분리된** DB 전용 인스턴스입니다. 메타데이터·벡터 임베딩(pgvector)는 여기에 두고, PDF·시험 파일은 S3에 둡니다.
 
 > **리전:** 앱 EC2와 DB EC2는 **같은 리전·같은 VPC**여야 프라이빗 IP(`172.31.x.x`)로 5432 접속이 됩니다. 리전이 다르면 타임아웃됩니다.

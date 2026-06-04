@@ -1,20 +1,23 @@
 package com.dontdelay.exam.job;
 
+import com.dontdelay.exam.service.DocumentIndexingService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/**
- * Phase 2에서 PDF 추출·chunking·임베딩 파이프라인을 구현한다.
- */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class DocumentIndexingJob {
+
+    private final DocumentIndexingService documentIndexingService;
 
     @Async
     public void start(UUID documentId) {
-        log.info("Document indexing queued (Phase 2): documentId={}", documentId);
+        log.info("Document indexing started: documentId={}", documentId);
+        documentIndexingService.index(documentId);
     }
 }

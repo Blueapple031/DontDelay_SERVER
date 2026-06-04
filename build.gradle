@@ -27,6 +27,9 @@ dependencies {
     implementation platform('software.amazon.awssdk:bom:2.29.45')
     implementation 'software.amazon.awssdk:s3'
 
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
+    implementation 'com.pgvector:pgvector:0.1.6'
+
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
 
