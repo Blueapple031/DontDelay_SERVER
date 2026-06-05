@@ -2,7 +2,9 @@ package com.dontdelay.controller;
 
 import com.dontdelay.domain.User;
 import com.dontdelay.dto.LoginRequest;
+import com.dontdelay.dto.LoginResponse;
 import com.dontdelay.dto.SignupRequest;
+import com.dontdelay.dto.UserProfileResponse;
 import com.dontdelay.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import java.util.Map;
 
 @RestController
@@ -30,15 +33,22 @@ public class AuthController {
     private final SecurityContextRepository securityContextRepository;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
+    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "이미 존재하는 사용자명입니다."));
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "이미 등록된 이메일입니다."));
         }
 
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .realName(request.getRealName())
+                .email(request.getEmail())
+                .department(request.getDepartment())
                 .build();
 
         userRepository.save(user);
@@ -60,7 +70,11 @@ public class AuthController {
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, httpRequest, httpResponse);
 
-        return ResponseEntity.ok(Map.of("message", "로그인 성공", "username", request.getUsername()));
+        return userRepository.findByUsername(request.getUsername())
+                .<ResponseEntity<?>>map(user ->
+                        ResponseEntity.ok(LoginResponse.from(UserProfileResponse.from(user))))
+                .orElseGet(() -> ResponseEntity.status(401)
+                        .body(Map.of("error", "UNAUTHORIZED", "message", "사용자를 찾을 수 없습니다.")));
     }
 
     @GetMapping("/me")
@@ -71,6 +85,9 @@ public class AuthController {
             return ResponseEntity.status(401)
                     .body(Map.of("error", "UNAUTHORIZED", "message", "로그인이 필요합니다."));
         }
-        return ResponseEntity.ok(Map.of("username", authentication.getName()));
+        return userRepository.findByUsername(authentication.getName())
+                .<ResponseEntity<?>>map(user -> ResponseEntity.ok(UserProfileResponse.from(user)))
+                .orElseGet(() -> ResponseEntity.status(401)
+                        .body(Map.of("error", "UNAUTHORIZED", "message", "사용자를 찾을 수 없습니다.")));
     }
 }

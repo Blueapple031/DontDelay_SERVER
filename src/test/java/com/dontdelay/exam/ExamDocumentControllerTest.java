@@ -40,6 +40,9 @@ class ExamDocumentControllerTest {
             userRepository.save(User.builder()
                     .username("examtest")
                     .password(passwordEncoder.encode("password"))
+                    .realName("테스트")
+                    .email("examtest@example.com")
+                    .department("컴퓨터공학과")
                     .build());
         }
     }

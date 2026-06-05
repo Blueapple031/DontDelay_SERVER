@@ -23,11 +23,17 @@
 |------|------|------|------|
 | username | String | Y | 사용자명 (고유값) |
 | password | String | Y | 비밀번호 (BCrypt 암호화 저장) |
+| realName | String | Y | 실명 |
+| email | String | Y | 이메일 (고유값, 이메일 형식) |
+| department | String | Y | 학과 |
 
 ```json
 {
   "username": "testuser",
-  "password": "mypassword123"
+  "password": "mypassword123",
+  "realName": "홍길동",
+  "email": "hong@example.com",
+  "department": "컴퓨터공학과"
 }
 ```
 
@@ -37,6 +43,8 @@
 |--------|------|-----------|
 | 200 OK | 회원가입 성공 | `{ "message": "회원가입 성공" }` |
 | 400 Bad Request | username 중복 | `{ "message": "이미 존재하는 사용자명입니다." }` |
+| 400 Bad Request | email 중복 | `{ "message": "이미 등록된 이메일입니다." }` |
+| 400 Bad Request | 필수값·형식 오류 | Spring Validation 기본 에러 응답 |
 
 ---
 
@@ -65,8 +73,54 @@
 
 | Status | 조건 | 응답 Body |
 |--------|------|-----------|
-| 200 OK | 로그인 성공 | `{ "message": "로그인 성공", "username": "testuser" }` |
+| 200 OK | 로그인 성공 | 아래 예시 |
+
+```json
+{
+  "message": "로그인 성공",
+  "username": "testuser",
+  "realName": "홍길동",
+  "email": "hong@example.com",
+  "department": "컴퓨터공학과",
+  "major": "컴퓨터공학과"
+}
+```
 | 401 Unauthorized | 인증 실패 | Spring Security 기본 에러 응답 |
+
+---
+
+## GET `/api/auth/me`
+
+로그인 세션 기준으로 현재 사용자 프로필을 조회합니다.
+
+### Request
+
+- **인증:** 필요 (로그인 세션 쿠키)
+
+### Response
+
+| Status | 조건 | 응답 Body |
+|--------|------|-----------|
+| 200 OK | 조회 성공 | 아래 예시 |
+| 401 Unauthorized | 미로그인·사용자 없음 | `{ "error": "UNAUTHORIZED", "message": "..." }` |
+
+```json
+{
+  "username": "testuser",
+  "realName": "홍길동",
+  "email": "hong@example.com",
+  "department": "컴퓨터공학과",
+  "major": "컴퓨터공학과"
+}
+```
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| username | String | 사용자명 |
+| realName | String | 실명 |
+| email | String | 이메일 |
+| department | String | 학과 |
+| major | String | 전공 (`department`와 동일) |
 
 ---
 
