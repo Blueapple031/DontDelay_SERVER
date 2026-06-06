@@ -9,11 +9,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.nio.charset.StandardCharsets;
 
@@ -22,18 +26,27 @@ import java.nio.charset.StandardCharsets;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            HandlerMappingIntrospector introspector
+    ) throws Exception {
+        MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);
+
         http
             .cors(cors -> {})
-            .csrf(csrf -> csrf.disable())
+            .csrf(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                    // CORS preflight
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    // 회원가입·로그인·/me 등 auth 전체
-                    .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/health", "/actuator/health", "/h2-console/**").permitAll()
-                    // Exam Generator — 로그인 필수
-                    .requestMatchers("/api/exam/**").authenticated()
+                    // AntPath: Spring Security 6 MVC /** 패턴은 signup 등에 매칭 안 될 수 있음
+                    .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                    .requestMatchers(
+                            new AntPathRequestMatcher("/api/health"),
+                            new AntPathRequestMatcher("/actuator/health"),
+                            new AntPathRequestMatcher("/h2-console/**")
+                    ).permitAll()
+                    .requestMatchers(mvc.pattern("/api/exam/**")).authenticated()
                     .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
