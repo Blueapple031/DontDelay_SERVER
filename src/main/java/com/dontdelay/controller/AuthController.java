@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -61,9 +62,18 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(401)
+                    .body(Map.of(
+                            "error", "INVALID_CREDENTIALS",
+                            "message", "아이디 또는 비밀번호가 올바르지 않습니다."
+                    ));
+        }
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);

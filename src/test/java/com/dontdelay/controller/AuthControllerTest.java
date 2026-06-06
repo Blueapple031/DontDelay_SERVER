@@ -44,6 +44,16 @@ class AuthControllerTest {
     }
 
     @Test
+    void login_withWrongPassword_returnsInvalidCredentials() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"profiletest\",\"password\":\"wrong\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.message").value("아이디 또는 비밀번호가 올바르지 않습니다."));
+    }
+
+    @Test
     void me_returnsProfileFields() throws Exception {
         MockHttpSession session = new MockHttpSession();
         mockMvc.perform(post("/api/auth/login")
