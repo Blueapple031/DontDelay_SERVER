@@ -3,6 +3,7 @@ package com.dontdelay.config;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -26,9 +27,21 @@ public class SecurityConfig {
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/health", "/actuator/health", "/h2-console/**").permitAll()
-                .requestMatchers("/api/exam/**").authenticated()
-                .anyRequest().authenticated()
+                    // CORS preflight
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // 인증 없이 허용 — 회원가입·로그인·헬스체크
+                    .requestMatchers(
+                            "/api/auth/signup",
+                            "/api/auth/login",
+                            "/api/health",
+                            "/actuator/health",
+                            "/h2-console/**"
+                    ).permitAll()
+                    // /me 는 컨트롤러에서 세션 여부 판단 (필터는 통과)
+                    .requestMatchers("/api/auth/me").permitAll()
+                    // Exam Generator — 로그인 필수
+                    .requestMatchers("/api/exam/**").authenticated()
+                    .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->
