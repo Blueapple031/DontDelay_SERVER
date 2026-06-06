@@ -29,16 +29,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     // CORS preflight
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    // 인증 없이 허용 — 회원가입·로그인·헬스체크
-                    .requestMatchers(
-                            "/api/auth/signup",
-                            "/api/auth/login",
-                            "/api/health",
-                            "/actuator/health",
-                            "/h2-console/**"
-                    ).permitAll()
-                    // /me 는 컨트롤러에서 세션 여부 판단 (필터는 통과)
-                    .requestMatchers("/api/auth/me").permitAll()
+                    // 회원가입·로그인·/me 등 auth 전체
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/health", "/actuator/health", "/h2-console/**").permitAll()
                     // Exam Generator — 로그인 필수
                     .requestMatchers("/api/exam/**").authenticated()
                     .anyRequest().authenticated()
