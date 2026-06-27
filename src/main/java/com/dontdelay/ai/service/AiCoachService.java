@@ -2,6 +2,7 @@ package com.dontdelay.ai.service;
 
 import com.dontdelay.ai.dto.ChatRequest;
 import com.dontdelay.ai.dto.ChatResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -12,22 +13,34 @@ import java.util.UUID;
 @Service
 public class AiCoachService {
 
+    private final ObjectProvider<AiCoachLlmClient> llmClientProvider;
+
+    public AiCoachService(ObjectProvider<AiCoachLlmClient> llmClientProvider) {
+        this.llmClientProvider = llmClientProvider;
+    }
+
     public ChatResponse chat(ChatRequest request) {
         String sessionId = request.sessionId() == null || request.sessionId().isBlank()
                 ? UUID.randomUUID().toString()
                 : request.sessionId();
-        List<ChatResponse.Recommendation> recommendations = buildRecommendations(request);
-        String content = buildContent(request, recommendations);
+        AiCoachGeneratedReply generatedReply = llmClientProvider
+                .getIfAvailable(() -> this::generateRuleBasedReply)
+                .generate(request);
 
         return new ChatResponse(
                 sessionId,
                 new ChatResponse.Reply(
                         "assistant",
-                        content,
-                        recommendations,
+                        generatedReply.content(),
+                        generatedReply.recommendations(),
                         OffsetDateTime.now()
                 )
         );
+    }
+
+    private AiCoachGeneratedReply generateRuleBasedReply(ChatRequest request) {
+        List<ChatResponse.Recommendation> recommendations = buildRecommendations(request);
+        return new AiCoachGeneratedReply(buildContent(request, recommendations), recommendations);
     }
 
     private List<ChatResponse.Recommendation> buildRecommendations(ChatRequest request) {
