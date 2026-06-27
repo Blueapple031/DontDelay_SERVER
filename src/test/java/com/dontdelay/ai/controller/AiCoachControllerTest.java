@@ -94,6 +94,38 @@ class AiCoachControllerTest {
                 .andExpect(jsonPath("$.reply.content").isString())
                 .andExpect(jsonPath("$.reply.recommendations[0].title").value("알고리즘 과제"))
                 .andExpect(jsonPath("$.reply.recommendations[0].tagLevel").value("urgent"))
-                .andExpect(jsonPath("$.reply.recommendations[0].relatedTodoId").value("todo-1"));
+                .andExpect(jsonPath("$.reply.recommendations[0].relatedTodoId").value("todo-1"))
+                .andExpect(jsonPath("$.reply.recommendations[0].action").value("completeTodo"));
+    }
+
+    @Test
+    void chat_withoutTodos_canReturnCreateTodoRecommendation() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        mockMvc.perform(post("/api/auth/login")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"aicoachtest\",\"password\":\"password\"}"))
+                .andExpect(status().isOk());
+
+        String body = """
+                {
+                  "message": "오늘 할 일 추천해줘",
+                  "locale": "ko-KR",
+                  "context": {
+                    "today": "2026-06-28",
+                    "todos": [],
+                    "upcomingEvents": []
+                  }
+                }
+                """;
+
+        mockMvc.perform(post("/api/ai/chat")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reply.recommendations[0].action").value("createTodo"))
+                .andExpect(jsonPath("$.reply.recommendations[0].todoDraft.title").isString())
+                .andExpect(jsonPath("$.reply.recommendations[0].todoDraft.date").value("2026-06-28"));
     }
 }
