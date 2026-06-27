@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,12 @@ public class GeminiAiCoachClient implements AiCoachLlmClient {
                     .body(String.class);
 
             return parseResponse(responseBody);
+        } catch (RestClientResponseException e) {
+            throw new AiApiException(
+                    AiErrorCode.LLM_UNAVAILABLE,
+                    "Gemini 응답을 가져오지 못했습니다. status=" + e.getStatusCode().value(),
+                    e
+            );
         } catch (RestClientException e) {
             throw new AiApiException(AiErrorCode.LLM_UNAVAILABLE, "Gemini 응답을 가져오지 못했습니다.", e);
         } catch (Exception e) {
