@@ -46,6 +46,7 @@ public class SecurityConfig {
                             new AntPathRequestMatcher("/actuator/health"),
                             new AntPathRequestMatcher("/h2-console/**")
                     ).permitAll()
+                    .requestMatchers(mvc.pattern("/api/ai/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/exam/**")).authenticated()
                     .anyRequest().authenticated()
             )
