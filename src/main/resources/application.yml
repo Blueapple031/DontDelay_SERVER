@@ -41,6 +41,11 @@ openai:
   api-key: ${OPENAI_API_KEY:}
   embedding-model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
 
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+
 upstage:
   api-key: ${UPSTAGE_API_KEY:}
   base-url: ${UPSTAGE_BASE_URL:https://api.upstage.ai}

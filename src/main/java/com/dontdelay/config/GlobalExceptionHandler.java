@@ -1,5 +1,6 @@
 package com.dontdelay.config;
 
+import com.dontdelay.ai.exception.AiApiException;
 import com.dontdelay.exam.exception.ExamApiException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -31,6 +32,14 @@ public class GlobalExceptionHandler {
         if (ex.getDetails() != null) {
             body.put("details", ex.getDetails());
         }
+        return ResponseEntity.status(ex.getErrorCode().getStatus()).body(body);
+    }
+
+    @ExceptionHandler(AiApiException.class)
+    public ResponseEntity<Map<String, Object>> handleAiApiException(AiApiException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", ex.getErrorCode().name());
+        body.put("message", ex.getMessage());
         return ResponseEntity.status(ex.getErrorCode().getStatus()).body(body);
     }
 }
