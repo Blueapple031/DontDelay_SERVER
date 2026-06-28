@@ -21,7 +21,21 @@ public record ChatResponse(
             String tag,
             String tagLevel,
             String reason,
-            String relatedTodoId
+            String relatedTodoId,
+            String action,
+            TodoDraft todoDraft
+    ) {
+    }
+
+    public record TodoDraft(
+            String title,
+            String date,
+            String priority,
+            Integer urgency,
+            Integer importance,
+            String tag,
+            String time,
+            String memo
     ) {
     }
 }

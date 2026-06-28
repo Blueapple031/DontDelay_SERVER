@@ -31,9 +31,15 @@ public class GeminiAiCoachClient implements AiCoachLlmClient {
             context.todos에 없는 과제나 일정을 확정된 사실처럼 말하지 마세요.
             추천 카드는 최대 3개만 만드세요.
             relatedTodoId는 반드시 context.todos에 있는 id만 사용하고, 새 할 일이면 null로 두세요.
+            기존 할 일을 추천할 때 action은 completeTodo로 두고 todoDraft는 null로 두세요.
+            새 할 일을 제안할 때 action은 createTodo로 두고, relatedTodoId는 null로 두며 todoDraft를 채우세요.
+            todoDraft는 사용자가 확인 후 앱에서 할 일로 추가할 초안입니다. title, date, priority, urgency, importance, tag, memo를 포함하세요.
+            todoDraft.date는 context.today 또는 사용자가 명시한 날짜를 yyyy-MM-dd로 사용하세요.
+            priority는 high, medium, low 중 하나만 사용하세요.
+            urgency와 importance는 1~8 사이 정수만 사용하세요.
             tagLevel은 urgent, scheduled, review, normal 중 하나만 사용하세요.
             응답은 반드시 JSON 객체만 반환하세요.
-            스키마: {"content":"string","recommendations":[{"title":"string","timeRange":"string","tag":"string","tagLevel":"urgent|scheduled|review|normal","reason":"string","relatedTodoId":"string|null"}]}
+            스키마: {"content":"string","recommendations":[{"title":"string","timeRange":"string","tag":"string","tagLevel":"urgent|scheduled|review|normal","reason":"string","relatedTodoId":"string|null","action":"completeTodo|createTodo|none","todoDraft":{"title":"string","date":"yyyy-MM-dd","priority":"high|medium|low","urgency":1,"importance":1,"tag":"string","time":"HH:mm|null","memo":"string"}|null}]}
             """;
 
     private final GeminiProperties properties;
@@ -150,7 +156,9 @@ public class GeminiAiCoachClient implements AiCoachLlmClient {
                     item.path("tag").asText("추천"),
                     normalizeTagLevel(item.path("tagLevel").asText("normal")),
                     textOrNull(item, "reason"),
-                    textOrNull(item, "relatedTodoId")
+                    textOrNull(item, "relatedTodoId"),
+                    normalizeAction(item.path("action").asText("none")),
+                    parseTodoDraft(item.path("todoDraft"))
             ));
 
             if (recommendations.size() >= 3) {
@@ -165,6 +173,45 @@ public class GeminiAiCoachClient implements AiCoachLlmClient {
             case "urgent", "scheduled", "review", "normal" -> raw;
             default -> "normal";
         };
+    }
+
+    private String normalizeAction(String raw) {
+        return switch (raw) {
+            case "completeTodo", "createTodo", "none" -> raw;
+            default -> "none";
+        };
+    }
+
+    private ChatResponse.TodoDraft parseTodoDraft(JsonNode node) {
+        if (!node.isObject()) {
+            return null;
+        }
+        String title = node.path("title").asText("");
+        String date = node.path("date").asText("");
+        if (title.isBlank() || date.isBlank()) {
+            return null;
+        }
+        return new ChatResponse.TodoDraft(
+                title,
+                date,
+                normalizePriority(node.path("priority").asText("medium")),
+                clampScore(node.path("urgency").asInt(5)),
+                clampScore(node.path("importance").asInt(5)),
+                node.path("tag").asText("default"),
+                textOrNull(node, "time"),
+                textOrNull(node, "memo")
+        );
+    }
+
+    private String normalizePriority(String raw) {
+        return switch (raw) {
+            case "high", "medium", "low" -> raw;
+            default -> "medium";
+        };
+    }
+
+    private int clampScore(int value) {
+        return Math.max(1, Math.min(8, value));
     }
 
     private String textOrNull(JsonNode node, String fieldName) {

@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Service
 public class AiCoachService {
@@ -44,12 +45,14 @@ public class AiCoachService {
     }
 
     private List<ChatResponse.Recommendation> buildRecommendations(ChatRequest request) {
+        String today = request.context() == null ? null : request.context().today();
         if (request.context() == null || request.context().todos() == null) {
-            return List.of();
+            return shouldSuggestNewTodo(request)
+                    ? List.of(newTodoRecommendation(request, today))
+                    : List.of();
         }
 
-        String today = request.context().today();
-        return request.context().todos().stream()
+        List<ChatResponse.Recommendation> recommendations = new ArrayList<>(request.context().todos().stream()
                 .filter(todo -> todo.title() != null && !todo.title().isBlank())
                 .sorted(Comparator
                         .comparing((ChatRequest.TodoContext todo) -> isOverdue(todo, today)).reversed()
@@ -57,7 +60,12 @@ public class AiCoachService {
                         .thenComparing(this::score, Comparator.reverseOrder()))
                 .limit(3)
                 .map(todo -> toRecommendation(todo, today))
-                .toList();
+                .toList());
+
+        if (recommendations.isEmpty() && shouldSuggestNewTodo(request)) {
+            recommendations.add(newTodoRecommendation(request, today));
+        }
+        return recommendations;
     }
 
     private String buildContent(
@@ -85,7 +93,9 @@ public class AiCoachService {
                     "지난 마감",
                     "urgent",
                     "마감일이 지나 우선 정리가 필요합니다.",
-                    todo.id()
+                    todo.id(),
+                    "completeTodo",
+                    null
             );
         }
 
@@ -96,7 +106,9 @@ public class AiCoachService {
                     "오늘 할 일",
                     "scheduled",
                     "오늘 처리 대상입니다.",
-                    todo.id()
+                    todo.id(),
+                    "completeTodo",
+                    null
             );
         }
 
@@ -107,7 +119,9 @@ public class AiCoachService {
                     "중요",
                     "review",
                     "중요도가 높아 미리 진도를 내는 편이 좋습니다.",
-                    todo.id()
+                    todo.id(),
+                    "completeTodo",
+                    null
             );
         }
 
@@ -117,8 +131,52 @@ public class AiCoachService {
                 "대기",
                 "normal",
                 "긴급한 항목 뒤에 처리하면 됩니다.",
-                todo.id()
+                todo.id(),
+                "completeTodo",
+                null
         );
+    }
+
+    private ChatResponse.Recommendation newTodoRecommendation(ChatRequest request, String today) {
+        String date = today == null || today.isBlank()
+                ? java.time.LocalDate.now().toString()
+                : today;
+        String title = request.message() != null
+                && (request.message().contains("시험") || request.message().contains("공부"))
+                ? "핵심 개념 40분 복습"
+                : "오늘 할 일 1개 정리";
+
+        return new ChatResponse.Recommendation(
+                title,
+                "오늘 안에",
+                "새 할 일",
+                "review",
+                "바로 실행할 수 있는 작은 할 일을 새로 추가해 진행할 수 있습니다.",
+                null,
+                "createTodo",
+                new ChatResponse.TodoDraft(
+                        title,
+                        date,
+                        "medium",
+                        5,
+                        6,
+                        "default",
+                        null,
+                        "AI 코치 추천"
+                )
+        );
+    }
+
+    private boolean shouldSuggestNewTodo(ChatRequest request) {
+        if (request.message() == null) {
+            return false;
+        }
+        String message = request.message();
+        return message.contains("추천")
+                || message.contains("계획")
+                || message.contains("뭐")
+                || message.contains("할 일")
+                || message.contains("공부");
     }
 
     private boolean isOverdue(ChatRequest.TodoContext todo, String today) {
